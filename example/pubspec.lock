@@ -802,17 +802,17 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "53c887cbe7adc47ac7d0f381c8cc50ac2ff272e7"
+      resolved-ref: d5f948f20230f3e7e3c72bb8a2a83569c4f66644
       url: "https://github.com/gohopo/social_foundation.git"
     source: git
-    version: "0.0.32"
+    version: "0.0.33"
   social_foundation_em:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.0.2"
+    version: "0.0.3"
   source_span:
     dependency: transitive
     description:

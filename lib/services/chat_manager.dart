@@ -58,6 +58,11 @@ abstract class SfChatManagerEm<TConversation extends SfConversation,TMessage ext
   }
   @override
   Future login(String userId,{String? token}) => EMClient.getInstance.loginWithToken(userId,token!);
+  @override
+  void onMessageReceived(TMessage message) async {
+    if(!message.transient) await updateUnreadMessagesCount(message.convId);
+    super.onMessageReceived(message);
+  }
   Future<TConversation> protectedConvertConversation(EMConversation conversation) async {
     var lastMessage = await conversation.latestMessage();
     var map = {};
@@ -131,5 +136,13 @@ abstract class SfChatManagerEm<TConversation extends SfConversation,TMessage ext
     );
     var result = await protectedSend(message,msgExtra['transient']??false);
     return protectedConvertMessage(result)!;
+  }
+  Future updateUnreadMessagesCount(String conversationId) async {
+    var emConversation = await getConversation(conversationId);
+    var conversation = (await SfLocatorManager.chatState.queryConversation(conversationId)) as TConversation? ?? emConversation;
+    conversation.unreadMessagesCount = emConversation.unreadMessagesCount;
+    conversation.lastMessage = emConversation.lastMessage;
+    conversation.lastMessageAt = emConversation.lastMessageAt;
+    saveConversation(conversation);
   }
 }

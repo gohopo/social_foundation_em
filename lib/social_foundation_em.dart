@@ -9,6 +9,8 @@ import 'social_foundation_em_platform_interface.dart';
 
 export 'package:im_flutter_sdk/im_flutter_sdk.dart' hide MessageType;
 export 'package:social_foundation/social_foundation.dart';
+//models
+export './models/conversation.dart';
 //services
 export './services/chat_manager.dart';
 
