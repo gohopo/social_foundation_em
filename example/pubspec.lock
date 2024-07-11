@@ -412,10 +412,10 @@ packages:
     dependency: transitive
     description:
       name: im_flutter_sdk
-      sha256: c448b784303bf7f8f8d4b7c196d1df4e9fd155f053776a90a76bc4ef054343dc
+      sha256: "3be8967db8ec08bdb691c4dc5c9b1a5f9f38d8672477100d9d62187857962169"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "4.6.1"
+    version: "4.6.1+1"
   image_gallery_saver:
     dependency: transitive
     description:

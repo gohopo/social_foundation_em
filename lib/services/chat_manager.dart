@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:im_flutter_sdk/im_flutter_sdk.dart';
-import 'package:social_foundation_em/social_foundation_em.dart';
+import 'package:social_foundation/social_foundation.dart';
 
 abstract class SfChatManagerEm<TConversation extends SfConversation,TMessage extends SfMessage> extends SfChatManager<TConversation,TMessage>{
   String get appKey;
