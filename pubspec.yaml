@@ -12,6 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  social_foundation:
+    git:
+      url: https://github.com/gohopo/social_foundation.git
+  im_flutter_sdk: 4.6.1
 
 dev_dependencies:
   flutter_test:
@@ -22,7 +26,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.gohopo.social_foundation_Em
+        package: com.gohopo.social_foundation_em
         pluginClass: SocialFoundationEmPlugin
       ios:
         pluginClass: SocialFoundationEmPlugin

@@ -7,6 +7,10 @@
 
 import 'social_foundation_em_platform_interface.dart';
 
+export 'package:social_foundation/social_foundation.dart';
+//services
+export './services/chat_manager.dart';
+
 class SocialFoundationEm {
   Future<String?> getPlatformVersion() {
     return SocialFoundationEmPlatform.instance.getPlatformVersion();
