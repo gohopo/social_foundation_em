@@ -73,7 +73,7 @@ abstract class SfChatManagerEm<TConversation extends SfConversation,TMessage ext
     map['members'] = conversation.type==EMConversationType.Chat?[SfLocatorManager.userState.curUserId,conversation.id]:[];
     map['unreadMessagesCount'] = await conversation.unreadCount();
     map['lastMessage'] = protectedConvertMessage(lastMessage);
-    map['lastMessageAt'] = lastMessage?.localTime;
+    map['lastMessageAt'] = lastMessage?.serverTime;
     return conversationFactory(map);
   }
   TMessage? protectedConvertMessage(EMMessage? message){
