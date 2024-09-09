@@ -13,6 +13,8 @@ export 'package:social_foundation/social_foundation.dart';
 export './models/conversation.dart';
 //services
 export './services/chat_manager.dart';
+//viewmodels
+export './view_models/chat_model.dart';
 
 class SocialFoundationEm {
   Future<String?> getPlatformVersion() {
