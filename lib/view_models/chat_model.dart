@@ -8,7 +8,7 @@ abstract class SfChatModelEm<TConversation extends SfConversation,TMessage exten
   void listenMessageEvent() async {
     disposeMessageEvent();
     if(conversation==null) return;
-    var messages = list.sublist(0,conversation!.unreadMessagesCount);
+    var messages = list.take(conversation!.unreadMessagesCount).toList();
     super.listenMessageEvent();
     if(messages.isNotEmpty) onUnreadMessages(messages);
   }
