@@ -1,12 +1,11 @@
 name: social_foundation_em
 description: A new Flutter plugin project.
-version: 0.0.4
+version: 0.1.0
 homepage: https://github.com/gohopo/social_foundation_em
 publish_to: none
 
 environment:
-  sdk: '>=2.19.6 <3.0.0'
-  flutter: ">=2.5.0"
+  sdk: '>=2.19.6 <4.0.0'
 
 dependencies:
   flutter:
@@ -16,12 +15,12 @@ dependencies:
     git:
       url: https://github.com/gohopo/social_foundation.git
     # path: ../../gohopo/social_foundation/
-  im_flutter_sdk: 4.6.1+1
+  im_flutter_sdk: 4.6.1+2
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^2.0.0
+dependency_overrides:
+  http: 1.2.2
+  uuid: 4.5.1
+  web: 0.5.1
 
 flutter:
   plugin:
