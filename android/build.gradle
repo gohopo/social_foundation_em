@@ -5,10 +5,14 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://developer.hihonor.com/repo/' }
+        maven { url 'https://developer.huawei.com/repo/' }
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0'
+        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.hihonor.mcs:asplugin:2.0.0'
+        classpath 'com.huawei.agconnect:agcp:1.9.1.301'
     }
 }
 
@@ -16,13 +20,19 @@ rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://developer.hihonor.com/repo/' }
+        maven { url 'https://developer.huawei.com/repo/' }
+        flatDir {
+            dirs project(':social_foundation_em').file('libs')
+        }
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.huawei.agconnect'
 
 android {
-    compileSdkVersion 31
+    compileSdk 31
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -32,4 +42,13 @@ android {
     defaultConfig {
         minSdkVersion 16
     }
+}
+
+dependencies {
+    implementation 'io.hyphenate:hyphenate-chat:4.8.2'
+    implementation 'com.hihonor.mcs:push:7.0.41.301'
+    implementation 'com.huawei.hms:push:6.12.0.300'
+    api(name:'MiPush_SDK_Client_6_0_1-C_3rd',ext:'aar')
+    api(name:'com.heytap.msp_V3.5.3',ext:'aar')
+    api(name:'vpush_clientSDK_v4.0.6.0_506',ext:'aar')
 }

@@ -17,7 +17,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  final _socialFoundationEmPlugin = SocialFoundationEm();
 
   @override
   void initState() {
@@ -32,7 +31,7 @@ class _MyAppState extends State<MyApp> {
     // We also handle the message potentially returning null.
     try {
       platformVersion =
-          await _socialFoundationEmPlugin.getPlatformVersion() ?? 'Unknown platform version';
+          await SocialFoundationEm.getPlatformVersion() ?? 'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }

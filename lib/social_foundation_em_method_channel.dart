@@ -14,4 +14,6 @@ class MethodChannelSocialFoundationEm extends SocialFoundationEmPlatform {
     final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
+  @override
+  Future registerPush() => methodChannel.invokeMethod('registerPush');
 }

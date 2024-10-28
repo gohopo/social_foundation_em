@@ -1,6 +1,10 @@
 package com.gohopo.social_foundation_em;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
+
+import com.gohopo.social_foundation_em.push.PushManager;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
@@ -15,17 +19,21 @@ public class SocialFoundationEmPlugin implements FlutterPlugin, MethodCallHandle
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
+  private Context context;
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "social_foundation_em");
     channel.setMethodCallHandler(this);
+    context = flutterPluginBinding.getApplicationContext();
   }
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     if (call.method.equals("getPlatformVersion")) {
       result.success("Android " + android.os.Build.VERSION.RELEASE);
+    } else if (call.method.equals("registerPush")) {
+      PushManager.registerPush(context);
     } else {
       result.notImplemented();
     }

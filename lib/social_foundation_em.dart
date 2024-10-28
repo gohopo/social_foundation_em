@@ -17,7 +17,8 @@ export './services/chat_manager.dart';
 export './view_models/chat_model.dart';
 
 class SocialFoundationEm {
-  Future<String?> getPlatformVersion() {
+  static Future<String?> getPlatformVersion() {
     return SocialFoundationEmPlatform.instance.getPlatformVersion();
   }
+  static Future registerPush() => SocialFoundationEmPlatform.instance.registerPush();
 }
