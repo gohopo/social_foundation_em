@@ -78,6 +78,17 @@
         <action android:name="com.xiaomi.push.PING_TIMER" />
     </intent-filter>
 </receiver>
+<receiver android:name="com.gohopo.social_foundation_em.push.MiPushService" android:exported="true">
+    <intent-filter>
+        <action android:name="com.xiaomi.mipush.RECEIVE_MESSAGE" />
+    </intent-filter>
+    <intent-filter>
+        <action android:name="com.xiaomi.mipush.MESSAGE_ARRIVED" />
+    </intent-filter>
+    <intent-filter>
+        <action android:name="com.xiaomi.mipush.ERROR" />
+    </intent-filter>
+</receiver>
 <!-- 小米推送 end -->
 ```
 
