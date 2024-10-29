@@ -9,7 +9,6 @@ import com.hihonor.push.sdk.HonorPushClient;
 import com.huawei.agconnect.AGConnectOptionsBuilder;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.common.ApiException;
-import com.huawei.hms.push.HmsMessaging;
 import com.hyphenate.chat.EMClient;
 
 public class PushManager {
@@ -23,14 +22,14 @@ public class PushManager {
     }
     else if(brand.equalsIgnoreCase("huawei")){
       Log.d("PushManager","is HuaweiPush");
-      HmsMessaging.getInstance(activity).setAutoInitEnabled(true);
+      getHuaweiToken(activity);
     }
     else if(HeytapPushManager.isSupportPush(activity)){
       Log.d("PushManager","is OppoPush");
       HeytapPushManager.init(activity, true);
     }
   }
-  private void getHuaweiToken(Activity activity){
+  private static void getHuaweiToken(Activity activity){
     new Thread(){
       @Override
       public void run(){
