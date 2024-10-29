@@ -48,5 +48,8 @@ dependencies {
     implementation 'com.huawei.hms:push:6.12.0.300'
     api(name:'MiPush_SDK_Client_6_0_1-C_3rd',ext:'aar')
     api(name:'com.heytap.msp_V3.5.3',ext:'aar')
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'commons-codec:commons-codec:1.6'
+    implementation 'androidx.annotation:annotation:1.1.0'
     api(name:'vpush_clientSDK_v4.0.6.0_506',ext:'aar')
 }
