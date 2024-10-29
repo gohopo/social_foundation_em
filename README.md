@@ -2,6 +2,31 @@
 
 ## 推送
 
+### android/build.gradle
+
+```gradle
+buildscript {
+    repositories {
+        maven { url 'https://developer.huawei.com/repo/' }
+    }
+    dependencies {
+        classpath 'com.huawei.agconnect:agcp:1.9.1.301'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        maven { url 'https://developer.huawei.com/repo/' }
+    }
+}
+```
+
+### android/app/build.gradle
+
+```gradle
+apply plugin: 'com.huawei.agconnect'
+```
+
 ### AndroidManifest.xml
 
 #### 荣耀
