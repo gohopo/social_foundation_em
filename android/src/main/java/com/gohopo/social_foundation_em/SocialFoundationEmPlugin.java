@@ -37,7 +37,7 @@ public class SocialFoundationEmPlugin implements FlutterPlugin, MethodCallHandle
   }
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    channel.setMethodCallHandler(null);
+    if(channel!=null) channel.setMethodCallHandler(null);
   }
 
   @Override
