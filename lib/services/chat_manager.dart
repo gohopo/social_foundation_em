@@ -108,6 +108,7 @@ abstract class SfChatManagerEm<TConversation extends SfConversation,TMessage ext
   void protectedOnMessageEvent(String msgId,EMMessage message) async {
     var data = await getMessage(msgId:msgId);
     if(data==null) return;
+    data.msgId = message.msgId;
     data.status = protectedConvertStatus(message.status);
     saveMessage(data);
   }
