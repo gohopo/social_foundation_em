@@ -5,15 +5,18 @@ import 'package:social_foundation/view_models/chat_model.dart';
 abstract class SfChatModelEm<TConversation extends SfConversation,TMessage extends SfMessage> extends SfChatModel<TConversation,TMessage>{
   SfChatModelEm(super.args);
   @override
-  void listenMessageEvent() async {
+  Future listenMessageEvent() async {
     disposeMessageEvent();
     if(conversation==null) return;
-    var messages = list.take(conversation!.unreadMessagesCount).toList();
-    super.listenMessageEvent();
-    if(messages.isNotEmpty) onUnreadMessages(messages);
+    await queryUnreadMessages();
+    return super.listenMessageEvent();
   }
   @override
   void onClientResuming() async {
     listenMessageEvent();
+  }
+  Future queryUnreadMessages() async {
+    var messages = list.take(conversation!.unreadMessagesCount).toList();
+    if(messages.isNotEmpty) await onUnreadMessages(messages);
   }
 }
