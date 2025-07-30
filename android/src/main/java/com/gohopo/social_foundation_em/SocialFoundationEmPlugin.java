@@ -26,18 +26,21 @@ public class SocialFoundationEmPlugin implements FlutterPlugin, MethodCallHandle
     context = flutterPluginBinding.getApplicationContext();
   }
   @Override
-  public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
-    } else if (call.method.equals("registerPush")) {
-      PushManager.registerPush(activity);
-    } else {
-      result.notImplemented();
-    }
-  }
-  @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     if(channel!=null) channel.setMethodCallHandler(null);
+  }
+
+  @Override
+  public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
+    if(call.method.equals("getPlatformVersion")){
+      result.success("Android " + android.os.Build.VERSION.RELEASE);
+    }
+    else if(call.method.equals("registerPush")){
+      PushManager.registerPush(activity);
+    }
+    else{
+      result.notImplemented();
+    }
   }
 
   @Override
