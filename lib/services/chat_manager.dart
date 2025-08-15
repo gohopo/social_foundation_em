@@ -5,9 +5,11 @@ import 'package:social_foundation/social_foundation.dart';
 
 abstract class SfChatManagerEm<TConversation extends SfConversation,TMessage extends SfMessage> extends SfChatManager<TConversation,TMessage>{
   String get appKey;
+  Map<String, String>? get extSettings => null;
   EMOptions get options => EMOptions.withAppKey(
     appKey,
     autoLogin: false,
+    extSettings: extSettings,
   );
   @override
   Future close() => EMClient.getInstance.logout();
