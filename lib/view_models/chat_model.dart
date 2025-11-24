@@ -3,7 +3,7 @@ import 'package:social_foundation/models/message.dart';
 import 'package:social_foundation/view_models/chat_model.dart';
 
 abstract class SfChatModelEm<TConversation extends SfConversation,TMessage extends SfMessage> extends SfChatModel<TConversation,TMessage>{
-  SfChatModelEm(super.args);
+  SfChatModelEm({super.conversation,super.name,super.anonymous});
   @override
   Future listenMessageEvent() async {
     disposeMessageEvent();
