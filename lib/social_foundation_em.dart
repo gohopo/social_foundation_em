@@ -11,6 +11,7 @@ export 'package:im_flutter_sdk/im_flutter_sdk.dart' hide MessageType;
 export 'package:social_foundation/social_foundation.dart';
 //models
 export './models/conversation.dart';
+export './models/message.dart';
 //services
 export './services/chat_manager.dart';
 //viewmodels

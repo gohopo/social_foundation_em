@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:im_flutter_sdk/im_flutter_sdk.dart';
 import 'package:social_foundation/social_foundation.dart';
 import 'package:social_foundation_em/models/conversation.dart';
+import 'package:social_foundation_em/models/message.dart';
 
-abstract class SfChatManagerEm<TConversation extends SfConversationEm,TMessage extends SfMessage> extends SfChatManager<TConversation,TMessage>{
+abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,TMessage extends SfMessageEm> extends SfChatManager<TConversation,TMessage>{
   String get appKey;
   Map<String, String>? get extSettings => null;
   EMOptions get options => EMOptions.withAppKey(
@@ -25,6 +26,9 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm,TMessage e
   Future convRead(TConversation conversation) async {
     var convType = conversation.type==0 ? EMConversationType.Chat : conversation.type==1 ? EMConversationType.GroupChat : EMConversationType.ChatRoom;
     var emConversation = await protectedGetConversation(conversation.convId,type:convType);
+    if(EMClient.getInstance.options?.requireAck==true && convType==EMConversationType.Chat){
+      EMClient.getInstance.chatManager.sendConversationReadAck(emConversation.id);
+    }
     return emConversation.markAllMessagesAsRead();
   }
   @override
@@ -49,6 +53,7 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm,TMessage e
     EMClient.getInstance.chatManager.addEventHandler(
       appKey,
       EMChatEventHandler(
+        onConversationRead: protectedOnConversationRead,
         onMessagesReceived: protectedOnMessagesReceived,
         onMessagesRecalledInfo: protectedOnMessagesRecalledInfo
       )
@@ -77,6 +82,7 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm,TMessage e
     var map = {
       'convId': message.conversationId,
       'fromId': message.from,
+      'readAck': message.hasReadAck?1:0,
       'msgId': message.msgId,
       'receiptTimestamp': message.hasDeliverAck ? DateTime.now().millisecondsSinceEpoch : null,
       'status': protectedConvertStatus(message.status),
@@ -109,6 +115,13 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm,TMessage e
     var conversation = await EMClient.getInstance.chatManager.getConversation(conversationId,type:type??EMConversationType.Chat);
     if(conversation==null) throw '未查询到会话';
     return conversation;
+  }
+  void protectedOnConversationRead(String from,String to) async {
+    var conversation = (await SfLocatorManager.chatState.queryConversation(from)) as TConversation?;
+    if(conversation?.lastMessage==null) return;
+    var message = conversation!.lastMessage! as TMessage;
+    message.readAck = 1;
+    saveMessage(message,conversation:conversation,isNew:false);
   }
   void protectedOnMessageEvent(String msgId,EMMessage message) async {
     var data = await getMessage(msgId:msgId);
@@ -177,7 +190,6 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm,TMessage e
     conversation.lastMessageAt = lastMessage.timestamp;
     conversation.unreadMessagesCount += messages.length;
     saveConversation(conversation as TConversation);
-    convRead(conversation);
     SfUnreadMessagesCountUpdatedEvent<TConversation>(conversation:conversation).emit();
   }
   void protectedUnreadMessages(Iterable<TMessage> messages){
