@@ -9,5 +9,5 @@ abstract class SfMessageEm extends SfMessage{
     map['readAck'] = readAck;
     return map;
   }
-  bool get hasReadAck => readAck>0;
+  bool get hasReadAck => msgType==SfMessageType.system || readAck>0;
 }

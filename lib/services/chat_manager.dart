@@ -117,9 +117,11 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     return conversation;
   }
   void protectedOnConversationRead(String from,String to) async {
+    await Future.delayed(const Duration(milliseconds:500));//确保lastMessage保存完成,否则会有两条消息
     var conversation = (await SfLocatorManager.chatState.queryConversation(from)) as TConversation?;
     if(conversation?.lastMessage==null) return;
     var message = conversation!.lastMessage! as TMessage;
+    if(message.msgType==SfMessageType.system) return;
     message.readAck = 1;
     saveMessage(message,conversation:conversation,isNew:false);
   }
