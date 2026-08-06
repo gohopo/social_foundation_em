@@ -1,11 +1,11 @@
 name: social_foundation_em
 description: social_foundation_em
-version: 0.2.2
+version: 0.2.3
 homepage: https://github.com/gohopo/social_foundation_em
 publish_to: none
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: '>=3.8.0'
 
 dependencies:
   flutter:
