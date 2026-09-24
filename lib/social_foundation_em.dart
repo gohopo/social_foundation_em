@@ -14,6 +14,7 @@ export './models/conversation.dart';
 export './models/message.dart';
 //services
 export './services/chat_manager.dart';
+export './services/event_manager.dart';
 //viewmodels
 export './view_models/chat_model.dart';
 

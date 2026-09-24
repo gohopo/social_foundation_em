@@ -4,8 +4,9 @@ import 'package:im_flutter_sdk/im_flutter_sdk.dart';
 import 'package:social_foundation/social_foundation.dart';
 import 'package:social_foundation_em/models/conversation.dart';
 import 'package:social_foundation_em/models/message.dart';
+import 'package:social_foundation_em/services/event_manager.dart';
 
-abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,TMessage extends SfMessageEm> extends SfChatManager<TConversation,TMessage>{
+abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation extends SfConversationEm<TMessage>,TMessage extends SfMessageEm> extends SfChatManager<TConversation,TMessage>{
   String get appKey;
   Map<String, String>? get extSettings => null;
   EMOptions get options => EMOptions.withAppKey(
@@ -15,6 +16,16 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
   );
   @override
   Future close() => EMClient.getInstance.logout();
+  TCmdMessage cmdMessageFactory(Map data);
+  TCmdMessage cmdMessageFactory2({required String convId,required String action,Map? msgExtra,Map? attribute,String? fromId,int? timestamp}) => cmdMessageFactory({
+    'ownerId': SfLocatorManager.userState.curUserId,
+    'convId': convId,
+    'action': action,
+    'fromId': fromId??SfLocatorManager.userState.curUserId,
+    'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
+    'msgExtra': msgExtra,
+    'attribute': attribute,
+  });
   @override
   Future<TConversation> convJoin(String conversationId) async {
     await EMClient.getInstance.chatRoomManager.joinChatRoom(conversationId);
@@ -53,21 +64,25 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     EMClient.getInstance.chatManager.addEventHandler(
       appKey,
       EMChatEventHandler(
+        onCmdMessagesReceived: protectedOnCmdMessagesReceived,
         onConversationRead: protectedOnConversationRead,
+        onMessagesRecalledInfo: protectedOnMessagesRecalledInfo,
         onMessagesReceived: protectedOnMessagesReceived,
-        onMessagesRecalledInfo: protectedOnMessagesRecalledInfo
       )
     );
     EMClient.getInstance.chatManager.addMessageEvent(
       appKey,
       ChatMessageEvent(
-        onSuccess: (msgId,msg)=>protectedOnMessageEvent(msgId,msg),
         onError: (msgId,msg,_)=>protectedOnMessageEvent(msgId,msg),
+        onSuccess: (msgId,msg)=>protectedOnMessageEvent(msgId,msg),
       )
     );
   }
   @override
   Future login(String userId,{String? token}) => EMClient.getInstance.loginWithToken(userId,token!);
+  void onCmdMessageReceived(TCmdMessage message){
+    saveCmdMessage(message,isNew:true);
+  }
   TConversation protectedConvertConversation(EMConversation conversation){
     Map map = {
       'convId': conversation.id,
@@ -78,7 +93,7 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     };
     return conversationFactory(map);
   }
-  TMessage protectedConvertMessage(EMMessage message){
+  TMessage protectedConvertMessage<TMessage extends SfMessageBase>(EMMessage message,TMessage Function(Map) converter){
     var map = {
       'convId': message.conversationId,
       'fromId': message.from,
@@ -91,7 +106,11 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     if(message.body.type == MessageType.TXT){
       map.addAll(jsonDecode((message.body as EMTextMessageBody).content));
     }
-    var data = messageFactory(map);
+    else if(message.body.type == MessageType.CMD){
+      map['action'] = (message.body as EMCmdMessageBody).action;
+    }
+    if(message.attributes!=null) map.addAll(message.attributes!);
+    var data = converter(map);
 
     if(message.chatType == ChatType.Chat){
       if(data.msgExtra['__cid']!=null) data.convId = data.msgExtra['__cid'];
@@ -116,6 +135,25 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     if(conversation==null) throw '未查询到会话';
     return conversation;
   }
+  (ChatType,String) protectedGetConversationInfo(TConversation conversation,Map msgExtra){
+    var chatType = conversation.type==0 ? ChatType.Chat : conversation.type==1 ? ChatType.GroupChat : ChatType.ChatRoom;
+    var conversationId = conversation.convId;
+    if(chatType==ChatType.Chat && conversation.otherId!=conversationId){
+      msgExtra['__cid'] = conversationId;
+      msgExtra['__cn'] = conversation.name;
+      conversationId = conversation.otherId!;
+    }
+    return (chatType,conversationId);
+  }
+  void protectedOnCmdMessagesReceived(List<EMMessage> messages){
+    var list = messages
+      .map((x) => protectedConvertMessage(x,cmdMessageFactory))
+      .sorted((a,b) => a.timestamp.compareTo(b.timestamp));
+
+    for(var message in list){
+      onCmdMessageReceived(message);
+    }
+  }
   void protectedOnConversationRead(String from,String to) async {
     await Future.delayed(const Duration(milliseconds:500));//确保lastMessage保存完成,否则会有两条消息
     var conversation = (await SfLocatorManager.chatState.queryConversation(from)) as TConversation?;
@@ -135,12 +173,12 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
   void protectedOnMessagesRecalledInfo(List<RecallMessageInfo> messages){
     for(var message in messages){
       if(message.recallMessage==null) continue;
-      onMessageRecalled(protectedConvertMessage(message.recallMessage!));
+      onMessageRecalled(protectedConvertMessage(message.recallMessage!,messageFactory));
     }
   }
   void protectedOnMessagesReceived(List<EMMessage> messages){
     var list = messages
-      .map((x) => protectedConvertMessage(x))
+      .map((x) => protectedConvertMessage(x,messageFactory))
       .sorted((a,b) => a.timestamp.compareTo(b.timestamp));
 
     protectedUnreadMessages(list.where((x) => !x.transient));
@@ -153,16 +191,20 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     message.deliverOnlineOnly = transient;
     return EMClient.getInstance.chatManager.sendMessage(message);
   }
+  Future<TCmdMessage> protectedSendCmdMessage(TConversation conversation,String action,Map msgExtra) async {
+    var (chatType,conversationId) = protectedGetConversationInfo(conversation,msgExtra);
+    var message = EMMessage.createCmdSendMessage(
+      action: action,
+      targetId: conversationId,
+      chatType: chatType
+    );
+    message.attributes = {'msgExtra':msgExtra};
+    var result = await protectedSend(message,msgExtra['transient']??false);
+    return protectedConvertMessage(result,cmdMessageFactory);
+  }
   @override
   Future<TMessage> protectedSendMessage(TConversation conversation,String? msg,String msgType,Map msgExtra) async {
-    var chatType = conversation.type==0 ? ChatType.Chat : conversation.type==1 ? ChatType.GroupChat : ChatType.ChatRoom;
-    var conversationId = conversation.convId;
-    if(chatType==ChatType.Chat && conversation.otherId!=conversationId){
-      msgExtra['__cid'] = conversationId;
-      msgExtra['__cn'] = conversation.name;
-      conversationId = conversation.otherId!;
-    }
-
+    var (chatType,conversationId) = protectedGetConversationInfo(conversation,msgExtra);
     var message = EMMessage.createTxtSendMessage(
       targetId: conversationId,
       content: jsonEncode({
@@ -173,7 +215,7 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
       chatType: chatType
     );
     var result = await protectedSend(message,msgExtra['transient']??false);
-    return protectedConvertMessage(result);
+    return protectedConvertMessage(result,messageFactory);
   }
   void protectedUnreadMessage(String conversationId,Iterable<TMessage> messages) async {
     var lastMessage = messages.last;
@@ -204,5 +246,18 @@ abstract class SfChatManagerEm<TConversation extends SfConversationEm<TMessage>,
     for(var item in map.entries){
       protectedUnreadMessage(item.key,item.value);
     }
+  }
+  void saveCmdMessage(TCmdMessage message,{bool isNew=false}) async {
+    if(!message.transient) await message.save();
+
+    SfCmdMessageEvent(message:message,isNew:isNew).emit();
+  }
+  Future<TCmdMessage> sendCmd({required TConversation conversation,required String action,Map? msgExtra,Map? attribute,bool? transient}){
+    var message = cmdMessageFactory2(
+      convId:conversation.convId,action:action,msgExtra:msgExtra,attribute:attribute
+    );
+    if(transient!=null) message.msgExtra['transient'] = transient;
+    
+    return protectedSendCmdMessage(conversation,action,message.msgExtra);
   }
 }
