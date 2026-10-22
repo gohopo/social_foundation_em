@@ -198,7 +198,10 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
       targetId: conversationId,
       chatType: chatType
     );
-    message.attributes = {'msgExtra':msgExtra};
+    message.attributes = {
+      if(msgExtra['__ext']!=null) ...msgExtra['__ext'],
+      'msgExtra': msgExtra
+    };
     var result = await protectedSend(message,msgExtra['transient']??false);
     return protectedConvertMessage(result,cmdMessageFactory);
   }
@@ -214,6 +217,7 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
       }),
       chatType: chatType
     );
+    if(msgExtra['__ext']!=null) message.attributes = msgExtra['__ext'];
     var result = await protectedSend(message,msgExtra['transient']??false);
     return protectedConvertMessage(result,messageFactory);
   }
