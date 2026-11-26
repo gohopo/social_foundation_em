@@ -26,17 +26,30 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
     'msgExtra': msgExtra,
     'attribute': attribute,
   });
+  TConversation conversationFactory2({required String convId,String? name,String? otherId,int? type}){
+    type ??= 0;
+    return conversationFactory({
+      'convId': convId,
+      'dict': {
+        '__type': type
+      },
+      'members': type==0 ? [SfLocatorManager.userState.curUserId,otherId??convId] : [],
+      'name': name,
+    });
+  }
   @override
   Future<TConversation> convJoin(String conversationId) async {
     await EMClient.getInstance.chatRoomManager.joinChatRoom(conversationId);
-    return protectedConvertConversation(await protectedGetConversation(conversationId,type:EMConversationType.ChatRoom));
+    return conversationFactory2(convId:conversationId,type:2);
   }
   @override
   Future convQuit(String conversationId) => EMClient.getInstance.chatRoomManager.leaveChatRoom(conversationId);
   @override
   Future convRead(TConversation conversation) async {
-    var convType = conversation.type==0 ? EMConversationType.Chat : conversation.type==1 ? EMConversationType.GroupChat : EMConversationType.ChatRoom;
-    var emConversation = await protectedGetConversation(conversation.convId,type:convType);
+    var (_,conversationId) = protectedGetConversationInfo(conversation,{});
+    var convType = conversation.getConversationType();
+    var emConversation = await protectedGetConversation(conversationId,type:convType);
+    if(emConversation==null) return;
     if(EMClient.getInstance.options?.requireAck==true && convType==EMConversationType.Chat){
       EMClient.getInstance.chatManager.sendConversationReadAck(emConversation.id);
     }
@@ -45,15 +58,15 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
   @override
   Future convRecall(String messageID,{String? conversationId,int? timestamp}) => EMClient.getInstance.chatManager.recallMessage(messageID);
   @override
-  Future<TConversation> getConversation(String conversationId) async {
-    var conversation = await protectedGetConversation(conversationId);
-    return protectedConvertConversation(conversation);
+  Future<TConversation> getConversation(String conversationId,{String? name,String? otherId,int? type}) async {
+    return conversationFactory2(convId:conversationId,name:name,otherId:otherId,type:type);
   }
   @override
   Future init() async {
     await EMClient.getInstance.init(options);
     await EMClient.getInstance.startCallback();
 
+    EMClient.getInstance.removeConnectionEventHandler(appKey);
     EMClient.getInstance.addConnectionEventHandler(
       appKey,
       EMConnectionEventHandler(
@@ -61,6 +74,7 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
         onDisconnected: onClientDisconnected
       )
     );
+    EMClient.getInstance.chatManager.removeEventHandler(appKey);
     EMClient.getInstance.chatManager.addEventHandler(
       appKey,
       EMChatEventHandler(
@@ -70,6 +84,7 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
         onMessagesReceived: protectedOnMessagesReceived,
       )
     );
+    EMClient.getInstance.chatManager.removeMessageEvent(appKey);
     EMClient.getInstance.chatManager.addMessageEvent(
       appKey,
       ChatMessageEvent(
@@ -82,16 +97,6 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
   Future login(String userId,{String? token}) => EMClient.getInstance.loginWithToken(userId,token!);
   void onCmdMessageReceived(TCmdMessage message){
     saveCmdMessage(message,isNew:true);
-  }
-  TConversation protectedConvertConversation(EMConversation conversation){
-    Map map = {
-      'convId': conversation.id,
-      'dict': {
-        '__type': conversation.type==EMConversationType.Chat ? 0 : conversation.type==EMConversationType.GroupChat ? 1 : 2
-      },
-      'members': conversation.type==EMConversationType.Chat ? [SfLocatorManager.userState.curUserId,conversation.id] : []
-    };
-    return conversationFactory(map);
   }
   TMessage protectedConvertMessage<TMessage extends SfMessageBase>(EMMessage message,TMessage Function(Map) converter){
     var map = {
@@ -130,13 +135,11 @@ abstract class SfChatManagerEm<TCmdMessage extends SfCmdMessageEm,TConversation 
       default: return SfMessageStatus.none;
     }
   }
-  Future<EMConversation> protectedGetConversation(String conversationId,{EMConversationType? type}) async {
-    var conversation = await EMClient.getInstance.chatManager.getConversation(conversationId,type:type??EMConversationType.Chat);
-    if(conversation==null) throw '未查询到会话';
-    return conversation;
+  Future<EMConversation?> protectedGetConversation(String conversationId,{EMConversationType? type}) async {
+    return EMClient.getInstance.chatManager.getConversation(conversationId,createIfNeed:false,type:type??EMConversationType.Chat);
   }
   (ChatType,String) protectedGetConversationInfo(TConversation conversation,Map msgExtra){
-    var chatType = conversation.type==0 ? ChatType.Chat : conversation.type==1 ? ChatType.GroupChat : ChatType.ChatRoom;
+    var chatType = conversation.getChatType();
     var conversationId = conversation.convId;
     if(chatType==ChatType.Chat && conversation.otherId!=conversationId){
       msgExtra['__cid'] = conversationId;
